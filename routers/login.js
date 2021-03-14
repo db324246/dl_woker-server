@@ -1,5 +1,5 @@
 const mongo = require('../utils/mongo');
-const { stringify } = require('../utils/index');
+const { response } = require('../utils/index');
 
 //cookie配置
 const cookieConfig = (maxAge, signed) => {
@@ -22,19 +22,13 @@ const login = async ctx => {
 
   const res = await mongo.findOne('user', { telephone })
   if (!res) {
-    ctx.response.body = {
-      status: 400,
-      message: '用户不存在'
-    }
+    ctx.response.body = response(400, '用户不存在')
     return
   }
   const user = await mongo.findOne('user', { telephone, password })
 
   if (!user || (user.password !== password)) {
-    ctx.response.body = {
-      status: 400,
-      message: '密码错误'
-    }
+    ctx.response.body = response(400, '密码错误')
     return
   }
 
@@ -42,9 +36,6 @@ const login = async ctx => {
   const token = '8888888888888888888'
   ctx.session[token] = user._id
 
-  console.log('储存token', user)
-  console.log('储存token', ctx.session)
-  console.log('储存token', ctx.session[token])
   //设置cookie
   ctx.cookies.set(
     '@user', //value(可替换为token)
@@ -57,28 +48,24 @@ const login = async ctx => {
     cookieConfig(1800000, true)
   );
 
-  ctx.response.body = {
+  ctx.response.body = response(200, '登出成功', {
     token,
     userInfo: user
-  }
+  })
 }
 
 // 登出
 const logout = async ctx => {
-  console.log(222, ctx)
   const userId = ctx.params.id
 
-  const res = await mongo.findOne('user', { _id: userId })
+  const res = await mongo.findOne('user', { _id: mongo.getObjectId(userId) })
   if (!res) {
-    ctx.response.body = {
-      status: 400,
-      message: '用户不存在'
-    }
+    ctx.response.body = response(400, '用户不存在')
     return
   }
 
   // 清除cookie 和 session
-  ctx.session[user.id] = null
+  ctx.session[userId] = null
   ctx.cookies.set(
     '@user',//name
     '', //value(可替换为token)
@@ -89,10 +76,7 @@ const logout = async ctx => {
     '', //value(可替换为token)
     cookieConfig(0, false)
   );
-  ctx.response.body = {
-    status: 200,
-    message: '登出成功'
-  }
+  ctx.response.body = response(200, '登录成功')
 }
 
 // 注册
@@ -105,10 +89,7 @@ const register = async ctx => {
 
   const res = await mongo.findOne('user', { telephone })
   if (res) {
-    ctx.response.body = {
-      status: 400,
-      message: '用户已存在'
-    }
+    ctx.response.body = response(400, '用户已存在')
     return
   }
 
@@ -121,10 +102,7 @@ const register = async ctx => {
   }
   const res2 = await mongo.insertOne('user', user)
 
-  ctx.response.body = {
-    status: 200,
-    message: '注册成功'
-  }
+  ctx.response.body = response(200, '注册成功')
 }
 
 module.exports = {

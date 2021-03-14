@@ -36,8 +36,9 @@ class Mongo {
       }
     })
   }
-  // 查询
-  find(collectionName, findObj) {
+
+  // 查询总计
+  findTotal(collectionName, findObj = {}) {
     const _this = this
     return this.connect().then(() => {
       return new Promise((r, j) => {
@@ -45,11 +46,27 @@ class Mongo {
           .find(findObj)
           .toArray(function(err, result) { // 返回集合中所有数据
             if (err) j(err);
+            else r(result.length)
+          })
+      })
+    })
+  }
+
+  // 查询分页
+  findPage(collectionName, pageNumber, pageSize, findObj = {}) {
+    const _this = this
+    return this.connect().then(() => {
+      return new Promise((r, j) => {
+        _this.dbase.collection(collectionName)
+          .find(findObj).limit(pageSize).skip((pageNumber - 1) * pageSize)
+          .toArray(function(err, result) { // 返回集合中所有数据
+            if (err) j(err);
             else r(result)
           })
       })
     })
   }
+
   // 查询
   findOne(collectionName, findObj) {
     const _this = this
@@ -63,6 +80,7 @@ class Mongo {
       })
     })
   }
+
   // 更新
   updateOne(collectionName, updateObj, where) {
     const _this = this
@@ -76,6 +94,7 @@ class Mongo {
       })
     })
   }
+
   // 插入数据
   insertOne(collectionName, insertObj) {
     const _this = this
@@ -89,19 +108,21 @@ class Mongo {
       })
     })
   }
+  
   // 删除数据
-  removeOne(collectionName, removeObj) {
+  remove(collectionName, removeObj) {
     const _this = this
     return this.connect().then(() => {
       return new Promise((r, j) => {
         _this.dbase.collection(collectionName)
-          .removeOne(removeObj, function(err, result) {
+          .remove(removeObj, function(err, result) {
             if (err) j(err);
             else r(result)
           })
       })
     })
   }
+
   // mongodb里面查询_id需要把字符串转换成对象
   getObjectId(id) {    
     return new ObjectID(id);

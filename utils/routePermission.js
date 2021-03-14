@@ -1,3 +1,4 @@
+const { response } = require('../utils/index');
 const unNeedToken = [
   '/login',
   '/register'
@@ -13,10 +14,7 @@ module.exports = async (ctx, next) => {
     if (userId && (ctx.cookies.get('@user') === userId)) {
       await next()
     } else {
-      ctx.response.body = {
-        status: 401,
-        message: '用户身份过期'
-      }
+      ctx.response.body = response(401, '用户身份过期')
     }
   }
 }
