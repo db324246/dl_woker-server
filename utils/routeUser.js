@@ -1,15 +1,16 @@
 const fs = require('fs');
-const path = require('path')
+const path = require('path');
+const basePath = require('../config/baseUrl.js');
 
 function addMapping(router, mapping) {
     for (const url in mapping) {
         if (url.startsWith('get ')) {
             const path = url.substring(4);
-            router.get(path, mapping[url]);
+            router.get(basePath + path, mapping[url]);
             console.log(`register URL mapping: GET ${path}`);
         } else if (url.startsWith('post ')) {
             const path = url.substring(5);
-            router.post(path, mapping[url]);
+            router.post(basePath + path, mapping[url]);
             console.log(`register URL mapping: POST ${path}`);
         } else {
             console.log(`invalid URL: ${url}`);

@@ -1,5 +1,5 @@
 const mongo = require('../utils/mongo');
-const { response } = require('../utils/index');
+const { response, encrypt, decrypt } = require('../utils/index');
 
 //cookie配置
 const cookieConfig = (maxAge, signed) => {
@@ -34,12 +34,17 @@ const login = async ctx => {
 
   //设置session
   const token = '8888888888888888888'
-  ctx.session[token] = user._id
+  ctx.session[token] = user.id
 
   //设置cookie
   ctx.cookies.set(
-    '@user', //value(可替换为token)
-    user._id, //name
+    '@user_id', //value(可替换为token)
+    user.id, //name
+    cookieConfig(1800000, true)
+  );
+  ctx.cookies.set(
+    '@username', //value(可替换为token)
+    encrypt(user.username), //name
     cookieConfig(1800000, true)
   );
   ctx.cookies.set(
@@ -48,7 +53,7 @@ const login = async ctx => {
     cookieConfig(1800000, true)
   );
 
-  ctx.response.body = response(200, '登出成功', {
+  ctx.response.body = response(200, '登录成功', {
     token,
     userInfo: user
   })
@@ -67,16 +72,21 @@ const logout = async ctx => {
   // 清除cookie 和 session
   ctx.session[userId] = null
   ctx.cookies.set(
-    '@user',//name
+    '@user_id',//name
     '', //value(可替换为token)
     cookieConfig(0, false)
+  );
+  ctx.cookies.set(
+    '@username', //value(可替换为token)
+    user.name, //name
+    cookieConfig(1800000, true)
   );
   ctx.cookies.set(
     '@token',//name
     '', //value(可替换为token)
     cookieConfig(0, false)
   );
-  ctx.response.body = response(200, '登录成功')
+  ctx.response.body = response(200, '登出成功')
 }
 
 // 注册
@@ -98,7 +108,8 @@ const register = async ctx => {
     telephone,
     username,
     password,
-    identityId: 3 // 3：工人 默认是工人
+    identityId: 3, // 3：工人 默认是工人
+    createTime: new Date()
   }
   const res2 = await mongo.insertOne('user', user)
 

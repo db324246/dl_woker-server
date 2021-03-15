@@ -2,7 +2,7 @@ const MongoDB = require('mongodb');
 // 获取操作数据库ID的方法
 const ObjectID = MongoDB.ObjectID;
 const MongoClient = MongoDB.MongoClient;
-const CONFIG = require('./mongodConfig')
+const CONFIG = require('../config/mongodConfig')
 
 class Mongo {
   // 单例模式，解决多次实例化实例不共享的问题
@@ -37,16 +37,17 @@ class Mongo {
     })
   }
 
-  // 查询总计
-  findTotal(collectionName, findObj = {}) {
+  // 查询列表（无分页）
+  findList(collectionName, findObj = {}) {
     const _this = this
     return this.connect().then(() => {
       return new Promise((r, j) => {
         _this.dbase.collection(collectionName)
           .find(findObj)
+          .sort({ createTime: -1 })
           .toArray(function(err, result) { // 返回集合中所有数据
             if (err) j(err);
-            else r(result.length)
+            else r(result)
           })
       })
     })
@@ -58,7 +59,10 @@ class Mongo {
     return this.connect().then(() => {
       return new Promise((r, j) => {
         _this.dbase.collection(collectionName)
-          .find(findObj).limit(pageSize).skip((pageNumber - 1) * pageSize)
+          .find(findObj)
+          .limit(pageSize)
+          .skip((pageNumber - 1) * pageSize)
+          .sort({ createTime: -1 })
           .toArray(function(err, result) { // 返回集合中所有数据
             if (err) j(err);
             else r(result)
@@ -74,8 +78,15 @@ class Mongo {
       return new Promise((r, j) => {
         _this.dbase.collection(collectionName)
           .findOne(findObj, function(err, result) { // 返回集合中所有数据
-            if (err) j(err);
-            else r(result)
+            if (err) return j(err);
+            if (!result) return r(result);
+            const res = {
+              id: result._id,
+              ...result
+            }
+            Reflect.deleteProperty(res, '_id')
+
+            r(res)
           })
       })
     })
@@ -115,7 +126,7 @@ class Mongo {
     return this.connect().then(() => {
       return new Promise((r, j) => {
         _this.dbase.collection(collectionName)
-          .remove(removeObj, function(err, result) {
+          .deleteOne(removeObj, function(err, result) {
             if (err) j(err);
             else r(result)
           })
