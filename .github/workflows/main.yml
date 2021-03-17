@@ -17,7 +17,7 @@ jobs:
       - name: Build 
         uses: actions/setup-node@master
       - run: npm install
-      - run: tar -zcvf release.tgz config static routers utils index.js package.json package-lock.json 
+      - run: tar -zcvf release.tgz config routers utils index.js package.json package-lock.json 
 
       # 发布 Release 
       - name: Create Release 
