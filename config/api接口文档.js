@@ -293,7 +293,7 @@ basePath = '/dlWokerSever/'
 }
 
 /**
- * 保存签到
+ * 补签
  *
  * 需要 token 和 cookie
  */
@@ -306,5 +306,76 @@ basePath = '/dlWokerSever/'
     workerName <string>, // required
     status <number>, // required
     signInDate <string>, // required
+  }
+}
+
+/**
+ * 签到信息查询
+ *
+ * 需要 token 和 cookie
+ */
+ {
+  url: '/signInfoByDate',
+  method: 'get',
+  params: {
+    projectId <string>, // required
+    status <number>, // required
+    signInDate <string>, // required
+  }
+}
+
+
+// -------------- 用户模块 --------------
+
+/**
+ * 用户分页接口
+ *
+ * 需要 token 和 cookie
+ */
+ {
+  url: '/userList',
+  method: 'get',
+  params: {
+    username <string>,
+    pageNumber <number>,
+    pageSize <number>
+  }
+}
+
+
+// -------------- 结算模块 --------------
+
+/**
+ * 薪资计算接口
+ *
+ * 需要 token 和 cookie
+ */
+ {
+  url: '/payList',
+  method: 'get',
+  params: {
+    projectId <string> // required
+  }
+}
+
+/**
+ * 结算工资
+ * 需要 token 和 cookie
+ * 
+ * projectWorkers.payStatus: 签到状态
+ * 0： 未结 
+ * 1： 已结清
+ * 2： 未结清
+ * 
+ * 签到状态是 2 时，remaining 必传
+ */
+ {
+  url: '/payOff',
+  method: 'post',
+  params: {
+    projectId <string>, // required
+    workerId <string>, // required
+    payStatus <number>, // required
+    remaining <number>, // 尾款
   }
 }

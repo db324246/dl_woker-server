@@ -134,6 +134,22 @@ class Mongo {
     })
   }
 
+  // 联表查询
+  aggregate(collectionName, removeObj) {
+    const _this = this
+    return this.connect().then(() => {
+      return new Promise((r, j) => {
+        _this.dbase.collection(collectionName)
+          .aggregate(removeObj)
+          .sort({ createTime: -1 })
+          .toArray(function(err, result) { // 返回集合中所有数据
+            if (err) j(err);
+            else r(result)
+          })
+      })
+    })
+  }
+
   // mongodb里面查询_id需要把字符串转换成对象
   getObjectId(id) {    
     return new ObjectID(id);

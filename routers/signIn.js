@@ -41,9 +41,7 @@ const signInAll = async ctx => {
 
   if (valide) return ctx.response.body = valide
 
-  const project = await mongo.findOne('projectMan', { _id: mongo.getObjectId(projectId) });
-
-  const workers = parse(project.workersJson);
+  const workers = await mongo.findList('projectWorkers', { projectId });
 
   await Promise.all(
     workers.map(w => {

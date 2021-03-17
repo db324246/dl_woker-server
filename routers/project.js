@@ -1,23 +1,49 @@
 const mongo = require('../utils/mongo');
-const { parse, stringify, response, requiredParams,  queryObj, timeParse, defined, forEach, decrypt } = require('../utils/index');
+const { parse, stringify, response, requiredParams,  queryObj, timeParse, defined, forEach, decrypt, tryCatch } = require('../utils/index');
 
-const workerAddHandler = async (projectId, worker, ctx) => {
+const workerAddHandler = async (projectId, worker, project) => {
   const hasWorker = await mongo.findOne('projectWorkers', {
     projectId,
     workerId: worker.workerId
   })
-  if (hasWorker) {
-    ctx.response.body = response(400, '工人已存在项目团队中')
-    return 0
-  } else {
+  if (!hasWorker) {
     await mongo.insertOne('projectWorkers', {
       projectId,
-      ...worker
+      ...worker,
+      projectName: project.name,
+      projectStatus: project.status,
+      days: 0,
+      price: 0,
+      payStatus: 0,
+      remaining: 0
+    })
+    await mongo.updateOne('user', {
+      status: 1
+    }, {
+      _id: mongo.getObjectId(worker.workerId)
     })
     return 1
   }
 }
 
+const workerDelHandler = async (projectId, workerId) => {
+  const hasWorker = await mongo.findOne('projectWorkers', {
+    projectId,
+    workerId
+  })
+  if (hasWorker) {
+    await mongo.remove('projectWorkers', {
+      projectId,
+      workerId
+    })
+    await mongo.updateOne('user', {
+      status: 0
+    }, {
+      _id: mongo.getObjectId(worker.workerId)
+    })
+    return 1
+  }
+}
 
 // 工程项目分页接口
 const projectList = async ctx => {
@@ -36,7 +62,6 @@ const projectList = async ctx => {
   const nowDate = new Date();
   let list = records.map(i => {
     i.status = new Date(i.startTime) < nowDate  ? 1 : 0;
-    i.startTime = timeParse(i.startTime)
     return i
   })
   let total = data.length;
@@ -54,7 +79,7 @@ const projectList = async ctx => {
 
 // 工程项目新增
 const addProject = async ctx => {
-  const { name, startTime, endTime, workersJson } = ctx.request.body
+  const { name, startTime, endTime } = ctx.request.body
 
   const valide = requiredParams(['name', 'startTime', 'endTime'], ctx.request.body)
 
@@ -67,7 +92,6 @@ const addProject = async ctx => {
       name,
       startTime,
       endTime,
-      workersJson: workersJson || '',
       status,
       createTime: new Date(),
       createUserId: ctx.cookies.get('@user_id'),
@@ -82,7 +106,7 @@ const addProject = async ctx => {
 
 // 工程项目更新
 const updateProject = async ctx => {
-  const { id, name, startTime, endTime, workersJson } = ctx.request.body
+  const { id, name, startTime, endTime } = ctx.request.body
 
   const valide = requiredParams(['id', 'name', 'startTime', 'endTime'], ctx.request.body)
 
@@ -95,7 +119,6 @@ const updateProject = async ctx => {
       name,
       startTime,
       endTime,
-      workersJson: workersJson || '',
       status
     }, { _id: mongo.getObjectId(id) })
 
@@ -123,8 +146,23 @@ const projectInfo = async ctx => {
   const id = ctx.params.id;
 
   try {
+    const nowDate = new Date();
     const res = await mongo.findOne('projectMan', { _id: mongo.getObjectId(id) })
+    res.status = new Date(res.startTime) < nowDate  ? 1 : 0;
 
+    ctx.response.body = response(200, '请求成功', res)
+  } catch (error) {
+    ctx.response.body = response(400, error)
+  }
+}
+
+// 查询项目下的工人
+const workersInPro = async ctx => {
+  const { projectId } = ctx.params
+
+  try {
+    const res = await mongo.findList('projectWorkers', { projectId })
+    
     ctx.response.body = response(200, '请求成功', res)
   } catch (error) {
     ctx.response.body = response(400, error)
@@ -146,24 +184,17 @@ const addWorker = async ctx => {
   const valide = requiredParams(['projectId', 'workersJson'], ctx.request.body);
   if (valide) return ctx.response.body = valide
 
-  const workers = parse(_workers);
-  const project = await mongo.findOne('projectMan', { _id: mongo.getObjectId(projectId) })
-  const workersJson = parse(project.workersJson);
-
-  forEach(workers, w => {
-    if (workersJson.some(_w => _w.workerId === w.workerId)) {
-      ctx.response.body = response(400, '工人已存在项目团队中')
-      return 0
-    }
-    return 1
-  })
-  
-  workersJson.push(...workers)
-
   try {
-    await mongo.updateOne('projectMan', {
-      workersJson: stringify(workersJson)
-    }, { _id: mongo.getObjectId(projectId) })
+    const workers = parse(_workers);
+
+    const nowDate = new Date();
+    const project = await mongo.findOne('projectMan', { _id: mongo.getObjectId(projectId) })
+    project.status = new Date(project.startTime) < nowDate  ? 1 : 0;
+    
+    forEach(workers, async w => {
+      const res = await workerAddHandler(projectId, w, project)
+      return res
+    })
     
     ctx.response.body = response(200, '添加成功')
   } catch (error) {
@@ -178,24 +209,13 @@ const removeWorker = async ctx => {
   const valide = requiredParams(['projectId', 'workerIds'], ctx.request.body);
   if (valide) return ctx.response.body = valide
 
-  const workerIds = _workerIds.split(',');
-  const project = await mongo.findOne('projectMan', { _id: mongo.getObjectId(projectId) })
-  let workersJson = parse(project.workersJson);
-  
-  forEach(workerIds, id => {
-    if (workersJson.every(w => w.workerId !== workerId)) {
-      ctx.response.body = response(400, '工人不存在项目团队中')
-      return 0
-    }
-    return 1
-  })
-  
-  workersJson = workersJson.filter(w => !workerIds.includes(w.workerId))
-
   try {
-    await mongo.updateOne('projectMan', {
-      workersJson: stringify(workersJson)
-    }, { _id: mongo.getObjectId(projectId) })
+    const workerIds = _workerIds.split(',');
+  
+    forEach(workerIds, async (id) => {
+      const res = await workerDelHandler(projectId, id)
+      return res
+    })
     
     ctx.response.body = response(200, '移除成功')
   } catch (error) {
@@ -211,4 +231,5 @@ module.exports = {
   'get /project/:id': projectInfo,
   'post /addWorker': addWorker,
   'post /removeWorker': removeWorker,
+  'get /workersInPro/:projectId': workersInPro
 }
