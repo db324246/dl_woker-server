@@ -33,7 +33,7 @@ module.exports.requiredParams = (keys, Obj) => {
   return false
 }
 
-module.exports.timeParse = (format = '{y}-{m}-{d} {h}:{i}') => {
+module.exports.timeParse = (_date, format = '{y}-{m}-{d} {h}:{i}') => {
   const date = new Date();
   const formatObj = {
     y: date.getFullYear(),
@@ -61,7 +61,7 @@ module.exports.timeParse = (format = '{y}-{m}-{d} {h}:{i}') => {
 module.exports.queryObj = obj => {
   const del = []
   for (const key in obj) {
-    if (obj[key] === undefined || obj[key] === null) del.push(key)
+    if (obj[key] === undefined || obj[key] === null || obj[key] === '') del.push(key)
   }
   del.forEach(k => Reflect.deleteProperty(obj, k))
   return obj
