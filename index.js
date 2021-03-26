@@ -8,7 +8,7 @@ const routePermission = require('./utils/routePermission')
 const session_signed_key = ["some secret hurr"];  // 这个是配合signed属性的签名key
 const sessionConfig = {
   key: 'koa:sess',   //cookie key (default is koa:sess)
-  maxAge: 1800000,  // 过期时间(毫秒) maxAge in ms (default is 1 days)
+  maxAge: 6000000,  // 过期时间(毫秒) maxAge in ms (default is 1 days)
   overwrite: true,  //是否可以overwrite    (默认default true)
   httpOnly: true, //cookie是否只有服务器端可以访问 httpOnly or not (default true)
   signed: true,   //签名默认true

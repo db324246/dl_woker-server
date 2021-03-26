@@ -47,7 +47,14 @@ class Mongo {
           .sort({ createTime: -1 })
           .toArray(function(err, result) { // 返回集合中所有数据
             if (err) j(err);
-            else r(result)
+            else r(result.map(i => {
+              const res = {
+                id: i._id,
+                ...i
+              }
+              Reflect.deleteProperty(res, '_id')
+              return res
+            }))
           })
       })
     })
@@ -65,7 +72,14 @@ class Mongo {
           .sort({ createTime: -1 })
           .toArray(function(err, result) { // 返回集合中所有数据
             if (err) j(err);
-            else r(result)
+            else r(result.map(i => {
+              const res = {
+                id: i._id,
+                ...i
+              }
+              Reflect.deleteProperty(res, '_id')
+              return res
+            }))
           })
       })
     })

@@ -1,5 +1,5 @@
 const mongo = require('../utils/mongo');
-const { response, encrypt, decrypt } = require('../utils/index');
+const { response, encrypt, decrypt, requiredParams } = require('../utils/index');
 
 //cookie配置
 const cookieConfig = (maxAge, signed) => {
@@ -19,6 +19,9 @@ const login = async ctx => {
   const {
     telephone,
     password } = ctx.request.body;
+
+  const valide = requiredParams(['telephone', 'password'], ctx.request.body)
+  if (valide) return ctx.response.body = valide
 
   const res = await mongo.findOne('user', { telephone })
   if (!res) {
@@ -40,17 +43,22 @@ const login = async ctx => {
   ctx.cookies.set(
     '@user_id', //value(可替换为token)
     user.id, //name
-    cookieConfig(1800000, true)
+    cookieConfig(6000000, true)
   );
   ctx.cookies.set(
     '@username', //value(可替换为token)
     encrypt(user.username), //name
-    cookieConfig(1800000, true)
+    cookieConfig(6000000, true)
+  );
+  ctx.cookies.set(
+    '@user_identityId', //name
+    user.identityId, //value(可替换为token)
+    cookieConfig(6000000, true)
   );
   ctx.cookies.set(
     '@token', //name
     token, //value(可替换为token)
-    cookieConfig(1800000, true)
+    cookieConfig(6000000, true)
   );
 
   ctx.response.body = response(200, '登录成功', {
@@ -63,8 +71,8 @@ const login = async ctx => {
 const logout = async ctx => {
   const userId = ctx.params.id
 
-  const res = await mongo.findOne('user', { _id: mongo.getObjectId(userId) })
-  if (!res) {
+  const user = await mongo.findOne('user', { _id: mongo.getObjectId(userId) })
+  if (!user) {
     ctx.response.body = response(400, '用户不存在')
     return
   }
@@ -78,8 +86,13 @@ const logout = async ctx => {
   );
   ctx.cookies.set(
     '@username', //value(可替换为token)
-    user.name, //name
-    cookieConfig(1800000, true)
+    '', //name
+    cookieConfig(0, false)
+  );
+  ctx.cookies.set(
+    '@user_identityId', //name
+    '', //value(可替换为token)
+    cookieConfig(0, false)
   );
   ctx.cookies.set(
     '@token',//name
@@ -97,9 +110,12 @@ const register = async ctx => {
     sex,
     password } = ctx.request.body;
 
+  const valide = requiredParams(['telephone', 'password', 'username', 'sex'], ctx.request.body)
+  if (valide) return ctx.response.body = valide
+
   const res = await mongo.findOne('user', { telephone })
   if (res) {
-    ctx.response.body = response(400, '用户已存在')
+    ctx.response.body = response(400, '用户(手机号)已存在')
     return
   }
 
@@ -109,6 +125,8 @@ const register = async ctx => {
     username,
     password,
     identityId: 3, // 3：工人 默认是工人
+    status: 0,
+    avatar: '',
     createTime: new Date()
   }
   const res2 = await mongo.insertOne('user', user)

@@ -342,6 +342,43 @@ basePath = '/dlWokerSever/'
   }
 }
 
+/**
+ * 更新用户信息接口
+ *
+ * 需要 token 和 cookie
+ */
+ {
+  url: '/updateUser',
+  method: 'post',
+  params: {
+    id <string>, // required
+    telephone <string>, // required
+    username <string>, // required
+    sex <number>, // required
+    identityId <number>
+  }
+}
+
+/**
+ * 删除用户接口
+ *
+ * 需要 token 和 cookie 和 超管身份
+ */
+ {
+  url: '/deleteUser/:id',
+  method: 'get'
+}
+
+/**
+ * 查询用户信息
+ *
+ * 需要 token 和 cookie
+ */
+ {
+  url: '/userInfo/:id',
+  method: 'get'
+}
+
 
 // -------------- 结算模块 --------------
 

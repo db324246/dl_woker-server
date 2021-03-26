@@ -33,7 +33,7 @@ const current = async ctx => {
   try {
     const user = await mongo.findOne('user', { _id: mongo.getObjectId(id) })
     
-    if (!user) throw '登陆身份已过期'
+    if (!user) throw '用户不存在'
 
     ctx.response.body = response(200, '查询成功', {
       token,
@@ -44,7 +44,72 @@ const current = async ctx => {
   }
 }
 
+// 更新用户信息
+const updateUser = async ctx => {
+  const {
+    id,
+    telephone,
+    username,
+    sex,
+    identityId } = ctx.request.body;
+  
+  const valide = requiredParams(['id', 'telephone', 'username', 'sex'], ctx.request.body)
+  if (valide) return ctx.response.body = valide
+
+  try {
+    const user = await mongo.findOne('user', { _id: mongo.getObjectId(id) })
+    
+    if (!user) throw '用户不存在'
+
+    await mongo.updateOne('user', {
+      telephone,
+      username,
+      sex,
+      identityId: identityId || user.identityId
+    },{ _id: mongo.getObjectId(id) })
+
+    ctx.response.body = response(200, '更新成功')
+  } catch (error) {
+    ctx.response.body = response(400, error)
+  }
+}
+
+// 删除用户
+const deleteUser = async ctx => {
+  const identityId = ctx.cookies.get('@user_identityId')
+  if (identityId > 0) {
+    ctx.response.body = response(400, '操作权限等级不够')
+  }
+  const id = ctx.params.id
+
+  try {
+    await mongo.remove('user', { _id: mongo.getObjectId(id) })
+    
+    ctx.response.body = response(200, '删除成功')
+  } catch (error) {
+    ctx.response.body = response(400, error)
+  }
+}
+
+// 查询用户信息
+const userInfo = async ctx => {
+  const id = ctx.params.id
+
+  try {
+    const user = await mongo.findOne('user', { _id: mongo.getObjectId(id) })
+    
+    if (!user) throw '用户不存在'
+
+    ctx.response.body = response(200, '查询成功', user)
+  } catch (error) {
+    ctx.response.body = response(400, error)
+  }
+}
+
 module.exports = {
   'get /userList': userList,
-  'get /current': current
+  'get /current': current,
+  'post /updateUser': updateUser,
+  'get /deleteUser/:id': deleteUser,
+  'get /userInfo/:id': userInfo
 }

@@ -22,13 +22,13 @@ module.exports = async (ctx, next) => {
     const user = ctx.cookies.get('@user_id')
 
     if (user) await next()
-    else ctx.response.body = response(401, '用户身份过期')
+    else ctx.response.body = response(401, '用户未登录')
 
   } else {
     const token = ctx.request.header.authorization
     const userId = ctx.session[token]
 
     if (userId && (ctx.cookies.get('@user_id') === userId)) await next()
-    else ctx.response.body = response(401, '用户身份过期')
+    else ctx.response.body = response(403, '用户身份过期')
   }
 }
