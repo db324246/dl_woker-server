@@ -1,5 +1,5 @@
 const mongo = require('../utils/mongo');
-const { response, requiredParams, decrypt } = require('../utils/index');
+const { response, timeParse, requiredParams, decrypt } = require('../utils/index');
 
 // 工种分类列表接口（无分页）
 const typeList = async ctx => {
@@ -7,7 +7,14 @@ const typeList = async ctx => {
     createUserId: ctx.cookies.get('@user_id')
   })
 
-  ctx.response.body = response(200, '请求成功', list)
+  ctx.response.body = response(
+    200,
+    '请求成功',
+    list.map(i => {
+      i.createTime = timeParse(i.createTime)
+      return i
+    })
+  )
 }
 
 // 工种分类新增

@@ -62,7 +62,7 @@ basePath = '/dlWokerSever/'
 // -------------- 工程项目模块 --------------
 
 /**
- * 工程项目新增接口
+ * 工程项目分页接口
  *
  * 需要 token 和 cookie
  */
@@ -70,10 +70,26 @@ basePath = '/dlWokerSever/'
   url: '/projectList',
   method: 'post',
   data: {
+    name <string>,
+    pageSize <number>, // required
+    pageNumber <number>, // required
+    status <number>,
+    createUserId <string>
+  }
+}
+
+/**
+ * 工程项目新增接口
+ *
+ * 需要 token 和 cookie
+ */
+{
+  url: '/addProject',
+  method: 'post',
+  data: {
     name <string>, // required
     startTime <string>, // required
     endTime <string>, // required
-    workersJson <string>
   }
 }
 
@@ -90,7 +106,6 @@ basePath = '/dlWokerSever/'
     name <string>, // required
     startTime <string>, // required
     endTime <string>, // required
-    workersJson <string>
   }
 }
 
@@ -111,6 +126,16 @@ basePath = '/dlWokerSever/'
  */
 {
   url: '/projectInfo/:id',
+  method: 'get'
+}
+
+/**
+ * 查询项目下的工人
+ *
+ * 需要 token 和 cookie
+ */
+{
+  url: '/workersInPro/:projectId',
   method: 'get'
 }
 
@@ -243,7 +268,18 @@ basePath = '/dlWokerSever/'
 }
 
 /**
- * 工种分类删除接口
+ * 团队详情信息接口
+ *
+ * 需要 token 和 cookie
+ */
+{
+  url: '/teamInfo/:id',
+  method: 'get'
+}
+
+
+/**
+ * 团队删除接口
  *
  * 需要 token 和 cookie
  */
@@ -344,6 +380,23 @@ basePath = '/dlWokerSever/'
 
 /**
  * 更新用户信息接口
+ *
+ * 需要 token 和 cookie
+ */
+ {
+  url: '/updateUser',
+  method: 'post',
+  params: {
+    id <string>, // required
+    telephone <string>, // required
+    username <string>, // required
+    sex <number>, // required
+    identityId <number>
+  }
+}
+
+/**
+ * 用户项目经历接口
  *
  * 需要 token 和 cookie
  */

@@ -17,6 +17,7 @@ const workerAddHandler = async (projectId, worker, project) => {
       payStatus: 0,
       remaining: 0
     })
+    // 添加工人时，修改工人的状态
     await mongo.updateOne('user', {
       status: 1
     }, {
@@ -36,6 +37,7 @@ const workerDelHandler = async (projectId, workerId) => {
       projectId,
       workerId
     })
+    // 移除工人时，修改工人的状态
     await mongo.updateOne('user', {
       status: 0
     }, {
@@ -54,6 +56,7 @@ const projectList = async ctx => {
     createUserId
   })
 
+  query.name && (query.name = {$regex: new RegExp(query.name, 'i')})
   const [ data, records ] = await Promise.all([
     mongo.findList('projectMan', query),
     mongo.findPage('projectMan', pageNumber || 1, pageSize || 10, query),
@@ -62,6 +65,7 @@ const projectList = async ctx => {
   const nowDate = new Date();
   let list = records.map(i => {
     i.status = new Date(i.startTime) < nowDate  ? 1 : 0;
+    i.createTime = timeParse(i.createTime)
     return i
   })
   let total = data.length;
@@ -228,7 +232,7 @@ module.exports = {
   'post /addProject': addProject,
   'post /updateProject': updateProject,
   'post /deleteProject/:id': deleteProject,
-  'get /project/:id': projectInfo,
+  'get /projectInfo/:id': projectInfo,
   'post /addWorker': addWorker,
   'post /removeWorker': removeWorker,
   'get /workersInPro/:projectId': workersInPro

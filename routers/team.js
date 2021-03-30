@@ -1,12 +1,40 @@
 const mongo = require('../utils/mongo');
-const { parse, response, requiredParams, decrypt } = require('../utils/index');
+const { parse, timeParse, response, requiredParams, decrypt } = require('../utils/index');
 
 // 团队列表接口（无分页）
 const teamList = async ctx => {
   const createUserId = ctx.cookies.get('@user_id')
-  const list = await mongo.findList('team', { createUserId })
 
-  ctx.response.body = response(200, '请求成功', list)
+  try {
+    const list = await mongo.findList('team', { createUserId })
+  
+    ctx.response.body = response(
+      200,
+      '请求成功',
+      list.map(i => {
+        i.createTime = timeParse(i.createTime)
+        return i
+      })
+    )
+  } catch (error) {
+    ctx.response.body = response(400, error)
+  }
+}
+
+// 团队详情信息
+const teamInfo = async ctx => {
+  const id = ctx.params.id
+  const createUserId = ctx.cookies.get('@user_id')
+  try {
+    const team = await mongo.findOne('team', {
+      createUserId,
+      _id: mongo.getObjectId(id)
+    })
+
+    ctx.response.body = response(200, '查询成功', team)
+  } catch (error) {
+    ctx.response.body = response(400, error)
+  }
 }
 
 // 团队新增
@@ -66,6 +94,7 @@ const deleteTeam = async ctx => {
 
 module.exports = {
   'get /teamList': teamList,
+  'get /teamInfo/:id': teamInfo,
   'post /addTeam': addTeam,
   'post /updateTeam': updateTeam,
   'post /deleteTeam/:id': deleteTeam

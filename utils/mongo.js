@@ -61,7 +61,9 @@ class Mongo {
   }
 
   // 查询分页
-  findPage(collectionName, pageNumber, pageSize, findObj = {}) {
+  findPage(collectionName, _pageNumber, _pageSize, findObj = {}) {
+    const pageNumber = parseInt(_pageNumber)
+    const pageSize = parseInt(_pageSize)
     const _this = this
     return this.connect().then(() => {
       return new Promise((r, j) => {

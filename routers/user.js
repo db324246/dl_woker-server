@@ -8,6 +8,8 @@ const userList = async ctx => {
   const query = queryObj({
     username
   })
+  
+  query.username && (query.username = {$regex: new RegExp(query.username, 'i')})
 
   const [ data, records ] = await Promise.all([
     mongo.findList('user', query),
@@ -21,7 +23,7 @@ const userList = async ctx => {
     list: records.map(i => {
       i.createTime = timeParse(i.createTime)
       return i
-    }),
+    })
   })
 }
 
@@ -106,10 +108,24 @@ const userInfo = async ctx => {
   }
 }
 
+// 用户项目经历接口
+const userProjects = async ctx => {
+  const id = ctx.params.id
+
+  try {
+    const projects = await mongo.findList('projectWorkers', { workerId: id })
+
+    ctx.response.body = response(200, '查询成功', projects)
+  } catch (error) {
+    ctx.response.body = response(400, error)
+  }
+}
+
 module.exports = {
   'get /userList': userList,
   'get /current': current,
   'post /updateUser': updateUser,
   'get /deleteUser/:id': deleteUser,
-  'get /userInfo/:id': userInfo
+  'get /userInfo/:id': userInfo,
+  'get /userProjects/:id': userProjects
 }
