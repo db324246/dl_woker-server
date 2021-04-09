@@ -2,6 +2,7 @@ const Koa = require('koa');
 const app = new Koa();
 const bodyParser = require('koa-bodyparser');
 const routeUser = require('./utils/routeUser');
+const handleError = require('./utils/handleError')
 const session = require('koa-session')
 const routePermission = require('./utils/routePermission')
 
@@ -21,6 +22,9 @@ app.use(session(sessionConfig, app));
 
 // post 请求体数据处理
 app.use(bodyParser());
+
+// 监听错误处理
+app.use(handleError)
 
 // 路由鉴权
 app.use(routePermission);

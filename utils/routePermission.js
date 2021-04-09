@@ -14,6 +14,8 @@ const unNeedTokenUrls = unNeedTokenApi.map(i => basePath + i);
 const unNeedCookieUrls = unNeedCookieApi.map(i => basePath + i);
 
 module.exports = async (ctx, next) => {
+  console.log(ctx.request.url)
+
   if (unNeedCookieUrls.includes(ctx.originalUrl)) {
 
     await next()
